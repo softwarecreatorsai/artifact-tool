@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6,11 +8,27 @@
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f9fafb;
-@@ -34,20 +27,20 @@
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --accent-color: #2563eb;
+            --editor-bg: #1e1e1e;
+            --editor-text: #d4d4d4;
+        }
+
+        .dark {
+            --bg-primary: #111827;
+            --bg-secondary: #1f2937;
+            --text-primary: #f9fafb;
+            --text-secondary: #d1d5db;
+            --border-color: #374151;
+            --accent-color: #3b82f6;
+            --editor-bg: #000000;
             --editor-text: #e5e7eb;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: system-ui, -apple-system, sans-serif;
             background: var(--bg-primary);
@@ -26,7 +44,14 @@
             border-bottom: 1px solid var(--border-color);
             padding: 1rem;
             position: sticky;
-@@ -62,381 +55,402 @@
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-content {
+            max-width: 1280px;
+            margin: 0 auto;
+            display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
@@ -218,7 +243,6 @@
             <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts"></iframe>
         </div>
     </main>
-
     <div id="errorOverlay" class="error-overlay"></div>
     <script>
         const codeInput = document.getElementById('codeInput');
@@ -255,9 +279,11 @@
                 super(props);
                 this.state = { hasError: false, error: null };
             }
+
             static getDerivedStateFromError(error) {
                 return { hasError: true, error };
             }
+
             render() {
                 if (this.state.hasError) {
                     return (
@@ -269,6 +295,7 @@
                 return this.props.children;
             }
         }
+
         // Wrap user code in async function to allow top-level await
         (async () => {
             try {
@@ -283,7 +310,7 @@
 
         function updatePreview() {
             const code = codeInput.value;
-
+            
             try {
                 if (currentMode === 'react') {
                     // Replace __CODE__ placeholder with actual code
@@ -356,6 +383,7 @@
         </div>
     );
 }
+
 ReactDOM.createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
         <App />
@@ -390,11 +418,13 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             codeInput.value = templates.html;
             updatePreview();
         });
+
         reactMode.addEventListener('click', () => {
             setMode('react');
             codeInput.value = templates.react;
             updatePreview();
         });
+
         templateSelect.addEventListener('change', (e) => {
             const template = templates[e.target.value];
             if (template) {
@@ -403,15 +433,19 @@ ReactDOM.createRoot(document.getElementById('root')).render(
                 updatePreview();
             }
         });
+
         runButton.addEventListener('click', updatePreview);
+
         themeToggle.addEventListener('click', () => {
             darkMode = !darkMode;
             updateTheme();
         });
+
         // Initialize
         updateTheme();
         codeInput.value = templates.html;
         updatePreview();
+
         // Error handling for iframe
         previewFrame.onerror = (error) => {
             showError(error);
