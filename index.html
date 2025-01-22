@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VS Code HTML Previewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <style>
+        /* VS Code-inspired theme */
+        :root {
+            --vscode-bg: #1e1e1e;
+            --vscode-sidebar: #252526;
+            --vscode-editor: #1e1e1e;
+            --vscode-text: #d4d4d4;
+            --vscode-border: #404040;
+        }
+
+        .dark {
+            --vscode-bg: #1e1e1e;
+            --vscode-sidebar: #252526;
+            --vscode-editor: #1e1e1e;
+            --vscode-text: #d4d4d4;
+            --vscode-border: #404040;
+        }
+
+        .light {
+            --vscode-bg: #ffffff;
+            --vscode-sidebar: #f3f3f3;
+            --vscode-editor: #ffffff;
+            --vscode-text: #000000;
+            --vscode-border: #e0e0e0;
+        }
+
+        .editor-theme {
+            background-color: var(--vscode-editor);
+            color: var(--vscode-text);
+        }
+
+        .sidebar-theme {
+            background-color: var(--vscode-sidebar);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #666;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 768px) {
+            .mobile-stack {
+                flex-direction: column !important;
+            }
+            
+            .mobile-h-half {
+                height: 50vh !important;
+            }
+        }
+    </style>
+</head>
+<body class="h-full bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+    <div class="min-h-full">
+        <!-- Header -->
+        <header class="bg-white dark:bg-gray-800 shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">VS Code HTML Previewer</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <!-- Theme Toggle -->
+                        <button id="themeToggle" class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                            </svg>
+                        </button>
+                        <!-- Action Buttons -->
+                        <div class="flex space-x-2">
+                            <button id="runButton" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                Run
+                            </button>
+                            <button id="downloadButton" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">
+                                <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"></path>
+                                </svg>
+                                Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex mobile-stack space-x-6 space-y-0 mobile-space-x-0 mobile-space-y-6">
+                <!-- Editor Section -->
+                <div class="flex-1 mobile-h-half">
+                    <div class="h-full rounded-lg shadow-lg overflow-hidden">
+                        <div class="bg-gray-800 dark:bg-gray-900 px-4 py-2 flex justify-between items-center">
+                            <h2 class="text-sm font-medium text-gray-200">HTML File</h2>
+                        </div>
+                        <textarea id="codeInput" class="editor-theme w-full h-[calc(100%-40px)] p-4 font-mono text-sm resize-none focus:outline-none" spellcheck="false"></textarea>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div class="flex-1 mobile-h-half">
+                    <div class="h-full rounded-lg shadow-lg overflow-hidden">
+                        <div class="bg-gray-800 dark:bg-gray-900 px-4 py-2 flex justify-between items-center">
+                            <h2 class="text-sm font-medium text-gray-200">Preview</h2>
+                            <button id="fullscreenButton" class="p-1 rounded-md hover:bg-gray-700 focus:outline-none">
+                                <svg class="h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <iframe id="previewFrame" class="w-full h-[calc(100%-40px)] bg-white dark:bg-gray-800"></iframe>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // DOM Elements
+        const codeInput = document.getElementById('codeInput');
+        const previewFrame = document.getElementById('previewFrame');
+        const runButton = document.getElementById('runButton');
+        const downloadButton = document.getElementById('downloadButton');
+        const fullscreenButton = document.getElementById('fullscreenButton');
+        const themeToggle = document.getElementById('themeToggle');
+
+        // Theme Management
+        let darkMode = localStorage.getItem('darkMode') === 'true';
+        
+        function updateTheme() {
+            document.documentElement.classList.toggle('dark', darkMode);
+            localStorage.setItem('darkMode', darkMode);
+        }
+
+        themeToggle.addEventListener('click', () => {
+            darkMode = !darkMode;
+            updateTheme();
+        });
+
+        updateTheme();
+
+        // Preview Management
+        function updatePreview() {
+            const code = codeInput.value;
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            previewFrame.src = url;
+            previewFrame.onload = () => URL.revokeObjectURL(url);
+        }
+
+        runButton.addEventListener('click', updatePreview);
+
+        downloadButton.addEventListener('click', () => {
+            const code = codeInput.value;
+            const blob = new Blob([code], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'preview.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // Fullscreen Management
+        let isFullscreen = false;
+        const previewContainer = document.querySelector('.preview-section');
+
+        fullscreenButton.addEventListener('click', () => {
+            isFullscreen = !isFullscreen;
+            if (isFullscreen) {
+                previewContainer.classList.add('fixed', 'inset-0', 'z-50', 'p-4', 'bg-white', 'dark:bg-gray-900');
+                fullscreenButton.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14h6v6M20 10h-6V4M14 4l7 7M3 21l7-7"/>';
+            } else {
+                previewContainer.classList.remove('fixed', 'inset-0', 'z-50', 'p-4', 'bg-white', 'dark:bg-gray-900');
+                fullscreenButton.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>';
+            }
+        });
+
+        // Initialize with example code
+        if (!codeInput.value) {
+            codeInput.value = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hello, World!</h1>
+        <p>Edit the code and click Run to see changes</p>
+    </div>
+</body>
+</html>`;
+            updatePreview();
+        }
+
+        // Mobile touch handling
+        let touchStartY;
+        let initialHeight;
+
+        function handleTouchStart(e) {
+            touchStartY = e.touches[0].clientY;
+            initialHeight = e.target.closest('.mobile-h-half').offsetHeight;
+        }
+
+        function handleTouchMove(e) {
+            if (!touchStartY) return;
+            
+            const deltaY = e.touches[0].clientY - touchStartY;
+            const newHeight = initialHeight + deltaY;
+            
+            // Ensure minimum height
+            if (newHeight >= 200) {
+                e.target.closest('.mobile-h-half').style.height = `${newHeight}px`;
+            }
+        }
+
+        function handleTouchEnd() {
+            touchStartY = null;
+            initialHeight = null;
+        }
+
+        // Add touch handlers for mobile resizing
+        document.querySelectorAll('.mobile-h-half').forEach(el => {
+            el.addEventListener('touchstart', handleTouchStart);
+            el.addEventListener('touchmove', handleTouchMove);
+            el.addEventListener('touchend', handleTouchEnd);
+        });
+    </script>
+</body>
+</html>
