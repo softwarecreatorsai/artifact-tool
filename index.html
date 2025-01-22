@@ -3,15 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude-style HTML Previewer</title>
+    <title>React & HTML Previewer</title>
     <style>
-        /* Reset and base styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f9fafb;
@@ -34,20 +27,20 @@
             --editor-text: #e5e7eb;
         }
 
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: var(--bg-primary);
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg-primary);
             color: var(--text-primary);
-            line-height: 1.5;
-            transition: background-color 0.3s, color 0.3s;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            transition: background-color 0.3s, color 0.3s;
         }
 
-        /* Header styles */
         .header {
-            background-color: var(--bg-primary);
+            background: var(--bg-primary);
             border-bottom: 1px solid var(--border-color);
             padding: 1rem;
             position: sticky;
@@ -62,223 +55,175 @@
             justify-content: space-between;
             align-items: center;
             gap: 1rem;
+            flex-wrap: wrap;
         }
 
-        /* Main content */
         .main {
             flex: 1;
             padding: 1rem;
             max-width: 1280px;
             margin: 0 auto;
             width: 100%;
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 1rem;
         }
 
         @media (max-width: 768px) {
             .main {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
                 flex-direction: column;
-                padding: 0.5rem;
+                align-items: stretch;
+            }
+            
+            .button-group {
+                flex-wrap: wrap;
             }
         }
 
-        /* Editor and Preview panels */
         .panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background-color: var(--bg-secondary);
+            background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 0.5rem;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .panel-header {
             padding: 0.75rem 1rem;
-            background-color: var(--bg-secondary);
+            background: var(--bg-secondary);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .panel-title {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        /* Editor specific styles */
         .editor-textarea {
             flex: 1;
             padding: 1rem;
-            font-family: 'Menlo', Monaco, 'Courier New', monospace;
-            font-size: 0.875rem;
-            line-height: 1.7;
+            font-family: monospace;
+            font-size: 14px;
+            line-height: 1.5;
             color: var(--editor-text);
-            background-color: var(--editor-bg);
+            background: var(--editor-bg);
             border: none;
             resize: none;
             min-height: calc(100vh - 200px);
-        }
-
-        .editor-textarea:focus {
             outline: none;
         }
 
-        /* Preview specific styles */
         .preview-frame {
             flex: 1;
             width: 100%;
             min-height: calc(100vh - 200px);
             border: none;
-            background-color: white;
+            background: white;
         }
 
-        /* Buttons */
         .button-group {
             display: flex;
+            align-items: center;
             gap: 0.5rem;
         }
 
         .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: 1px solid transparent;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 0.375rem;
             font-size: 0.875rem;
             font-weight: 500;
-            cursor: pointer;
             transition: all 0.2s;
-            border: 1px solid transparent;
         }
 
         .btn-primary {
-            background-color: var(--accent-color);
+            background: var(--accent-color);
             color: white;
         }
 
-        .btn-primary:hover {
-            opacity: 0.9;
-        }
-
         .btn-secondary {
-            background-color: var(--bg-secondary);
+            background: var(--bg-secondary);
             border-color: var(--border-color);
             color: var(--text-primary);
         }
 
-        .btn-secondary:hover {
-            background-color: var(--border-color);
+        .mode-group {
+            display: flex;
+            gap: 0.25rem;
+            padding: 0.25rem;
+            background: var(--bg-secondary);
+            border-radius: 0.375rem;
+            border: 1px solid var(--border-color);
         }
 
-        .btn-icon {
-            padding: 0.5rem;
-            border-radius: 0.375rem;
+        .mode-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.25rem;
             background: transparent;
             color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
         }
 
-        .btn-icon:hover {
-            background-color: var(--bg-secondary);
+        .mode-btn.active {
+            background: var(--accent-color);
+            color: white;
         }
 
-        /* Icons */
-        .icon {
-            width: 1.25rem;
-            height: 1.25rem;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            fill: none;
+        select {
+            padding: 0.5rem;
+            border-radius: 0.375rem;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.875rem;
         }
 
-        /* Fullscreen mode */
-        .fullscreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 50;
-            background-color: var(--bg-primary);
+        .error-overlay {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            background: #dc2626;
+            color: white;
             padding: 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            z-index: 100;
+            display: none;
         }
 
-        .fullscreen .preview-frame {
-            height: calc(100vh - 4rem);
-        }
-
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-wrap: wrap;
-            }
-
-            .panel {
-                min-height: calc(50vh - 2rem);
-            }
-
-            .editor-textarea,
-            .preview-frame {
-                min-height: calc(50vh - 4rem);
-            }
-
-            .btn {
-                padding: 0.5rem;
-            }
-
-            .btn span {
-                display: none;
-            }
-        }
-
-        /* Scrollbar styles */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--text-secondary);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-primary);
+        .error-overlay.visible {
+            display: block;
         }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
-            <h1 class="panel-title">HTML Previewer</h1>
+            <h1>React & HTML Previewer</h1>
             <div class="button-group">
-                <button id="themeToggle" class="btn btn-icon" title="Toggle theme">
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-                    </svg>
-                </button>
-                <button id="runButton" class="btn btn-primary">
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <polygon points="5 3 19 12 5 21 5 3"/>
-                    </svg>
-                    <span>Run</span>
-                </button>
-                <button id="downloadButton" class="btn btn-secondary">
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    <span>Download</span>
-                </button>
+                <div class="mode-group">
+                    <button id="htmlMode" class="mode-btn active">HTML</button>
+                    <button id="reactMode" class="mode-btn">React</button>
+                </div>
+                <select id="templateSelect">
+                    <option value="">Choose example...</option>
+                    <option value="html">Basic HTML</option>
+                    <option value="react">Basic React</option>
+                    <option value="react-state">React with State</option>
+                </select>
+                <button id="runButton" class="btn btn-primary">▶ Run</button>
+                <button id="themeToggle" class="btn btn-secondary">🌙 Theme</button>
             </div>
         </div>
     </header>
@@ -286,98 +231,115 @@
     <main class="main">
         <div class="panel">
             <div class="panel-header">
-                <span class="panel-title">Editor</span>
+                <span>Editor</span>
             </div>
             <textarea id="codeInput" class="editor-textarea" spellcheck="false"></textarea>
         </div>
 
-        <div class="panel" id="previewContainer">
+        <div class="panel">
             <div class="panel-header">
-                <span class="panel-title">Preview</span>
-                <button id="fullscreenButton" class="btn btn-icon">
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-                    </svg>
-                </button>
+                <span>Preview</span>
             </div>
-            <iframe id="previewFrame" class="preview-frame"></iframe>
+            <iframe id="previewFrame" class="preview-frame" sandbox="allow-scripts"></iframe>
         </div>
     </main>
 
+    <div id="errorOverlay" class="error-overlay"></div>
     <script>
-        // DOM Elements
         const codeInput = document.getElementById('codeInput');
         const previewFrame = document.getElementById('previewFrame');
         const runButton = document.getElementById('runButton');
-        const downloadButton = document.getElementById('downloadButton');
-        const fullscreenButton = document.getElementById('fullscreenButton');
         const themeToggle = document.getElementById('themeToggle');
-        const previewContainer = document.getElementById('previewContainer');
+        const htmlMode = document.getElementById('htmlMode');
+        const reactMode = document.getElementById('reactMode');
+        const templateSelect = document.getElementById('templateSelect');
+        const errorOverlay = document.getElementById('errorOverlay');
 
-        // Theme Management
-        let darkMode = localStorage.getItem('darkMode') === 'true' || 
-                      window.matchMedia('(prefers-color-scheme: dark)').matches;
+        let currentMode = 'html';
+        let darkMode = localStorage.getItem('darkMode') === 'true';
 
-        function updateTheme() {
-            document.body.classList.toggle('dark', darkMode);
-            localStorage.setItem('darkMode', darkMode);
-        }
-
-        themeToggle.addEventListener('click', () => {
-            darkMode = !darkMode;
-            updateTheme();
-        });
-
-        // Preview Management
-        function updatePreview() {
-            const code = codeInput.value;
-            const blob = new Blob([code], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            previewFrame.src = url;
-            previewFrame.onload = () => URL.revokeObjectURL(url);
-        }
-
-        runButton.addEventListener('click', updatePreview);
-
-        // Download Management
-        downloadButton.addEventListener('click', () => {
-            const code = codeInput.value;
-            const blob = new Blob([code], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'preview.html';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
-
-        // Fullscreen Management
-        let isFullscreen = false;
-        
-        fullscreenButton.addEventListener('click', () => {
-            isFullscreen = !isFullscreen;
-            previewContainer.classList.toggle('fullscreen', isFullscreen);
-            
-            const iconPath = isFullscreen
-                ? 'M4 14h6v6M20 10h-6V4M14 4l7 7M3 21l7-7'
-                : 'M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7';
-                
-            fullscreenButton.querySelector('path').setAttribute('d', iconPath);
-        });
-
-        // Initialize with example code
-        if (!codeInput.value) {
-            codeInput.value = `<!DOCTYPE html>
-<html lang="en">
+        const REACT_TEMPLATE = `
+<!DOCTYPE html>
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Example</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"><\/script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"><\/script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"><\/script>
+    <style>
+        body { margin: 0; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        // Error Boundary Component
+        class ErrorBoundary extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null };
+            }
+
+            static getDerivedStateFromError(error) {
+                return { hasError: true, error };
+            }
+
+            render() {
+                if (this.state.hasError) {
+                    return (
+                        <div style={{ color: 'red', padding: '1rem' }}>
+                            {this.state.error.toString()}
+                        </div>
+                    );
+                }
+                return this.props.children;
+            }
+        }
+
+        // Wrap user code in async function to allow top-level await
+        (async () => {
+            try {
+                __CODE__
+            } catch (error) {
+                document.body.innerHTML = '<div style="color: red; padding: 1rem;">' + error + '</div>';
+            }
+        })();
+    <\/script>
+</body>
+</html>`;
+
+        function updatePreview() {
+            const code = codeInput.value;
+            
+            try {
+                if (currentMode === 'react') {
+                    // Replace __CODE__ placeholder with actual code
+                    const htmlContent = REACT_TEMPLATE.replace('__CODE__', code);
+                    const blob = new Blob([htmlContent], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    previewFrame.src = url;
+                    previewFrame.onload = () => URL.revokeObjectURL(url);
+                } else {
+                    const blob = new Blob([code], { type: 'text/html' });
+                    const url = URL.createObjectURL(blob);
+                    previewFrame.src = url;
+                    previewFrame.onload = () => URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                showError(error);
+            }
+        }
+
+        const templates = {
+            html: `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Basic Example</title>
     <style>
         body {
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: system-ui, sans-serif;
             display: grid;
             place-items: center;
             min-height: 100vh;
@@ -385,58 +347,110 @@
             background: #f0f0f0;
         }
         .container {
-            text-align: center;
             padding: 2rem;
             background: white;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Hello, World!</h1>
-        <p>Edit the code and click Run to see changes</p>
+        <p>Edit this code and click Run</p>
     </div>
 </body>
-</html>`;
+</html>`,
+            react: `function App() {
+    return (
+        <div style={{
+            minHeight: '100vh',
+            display: 'grid',
+            placeItems: 'center',
+            background: '#f0f0f0',
+            fontFamily: 'system-ui, sans-serif'
+        }}>
+            <div style={{
+                padding: '2rem',
+                background: 'white',
+                borderRadius: '8px',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                textAlign: 'center'
+            }}>
+                <h1>Hello from React!</h1>
+                <p>Edit this code and click Run</p>
+            </div>
+        </div>
+    );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+    <ErrorBoundary>
+        <App />
+    </ErrorBoundary>
+);`
+        };
+
+        function setMode(mode) {
+            currentMode = mode;
+            htmlMode.classList.toggle('active', mode === 'html');
+            reactMode.classList.toggle('active', mode === 'react');
+            templateSelect.value = '';
+        }
+
+        function updateTheme() {
+            document.body.classList.toggle('dark', darkMode);
+            localStorage.setItem('darkMode', darkMode);
+        }
+
+        function showError(error) {
+            const errorOverlay = document.getElementById('errorOverlay');
+            errorOverlay.textContent = error.toString();
+            errorOverlay.classList.add('visible');
+            setTimeout(() => {
+                errorOverlay.classList.remove('visible');
+            }, 5000);
+        }
+
+        // Event Listeners
+        htmlMode.addEventListener('click', () => {
+            setMode('html');
+            codeInput.value = templates.html;
             updatePreview();
-        }
-
-        // Initialize theme
-        updateTheme();
-
-        // Handle mobile touch events for resizing
-        let touchStartY;
-        let initialHeight;
-
-        function handleTouchStart(e) {
-            touchStartY = e.touches[0].clientY;
-            initialHeight = e.target.closest('.panel').offsetHeight;
-        }
-
-        function handleTouchMove(e) {
-            if (!touchStartY) return;
-            
-            const deltaY = e.touches[0].clientY - touchStartY;
-            const newHeight = initialHeight + deltaY;
-            
-            if (newHeight >= 200) {
-                e.target.closest('.panel').style.height = `${newHeight}px`;
-            }
-        }
-
-        function handleTouchEnd() {
-            touchStartY = null;
-            initialHeight = null;
-        }
-
-        // Add touch handlers for mobile resizing
-        document.querySelectorAll('.panel').forEach(el => {
-            el.addEventListener('touchstart', handleTouchStart);
-            el.addEventListener('touchmove', handleTouchMove);
-            el.addEventListener('touchend', handleTouchEnd);
         });
+
+        reactMode.addEventListener('click', () => {
+            setMode('react');
+            codeInput.value = templates.react;
+            updatePreview();
+        });
+
+        templateSelect.addEventListener('change', (e) => {
+            const template = templates[e.target.value];
+            if (template) {
+                codeInput.value = template;
+                setMode(e.target.value.startsWith('react') ? 'react' : 'html');
+                updatePreview();
+            }
+        });
+
+        runButton.addEventListener('click', updatePreview);
+
+        themeToggle.addEventListener('click', () => {
+            darkMode = !darkMode;
+            updateTheme();
+        });
+
+        // Initialize
+        updateTheme();
+        codeInput.value = templates.html;
+        updatePreview();
+
+        // Error handling for iframe
+        previewFrame.onerror = (error) => {
+            showError(error);
+        };
     </script>
 </body>
 </html>
