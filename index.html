@@ -1,46 +1,179 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VS Code HTML Previewer</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
+    <!-- Tailwind CSS CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <style>
-        /* VS Code-inspired theme */
+        /* Base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            min-height: 100vh;
+            background-color: #f3f4f6;
+        }
+
+        /* Theme colors */
         :root {
-            --vscode-bg: #1e1e1e;
-            --vscode-sidebar: #252526;
-            --vscode-editor: #1e1e1e;
-            --vscode-text: #d4d4d4;
-            --vscode-border: #404040;
+            --editor-bg: #1e1e1e;
+            --editor-fg: #d4d4d4;
+            --header-bg: #ffffff;
+            --header-fg: #111827;
+            --border-color: #e5e7eb;
         }
 
         .dark {
-            --vscode-bg: #1e1e1e;
-            --vscode-sidebar: #252526;
-            --vscode-editor: #1e1e1e;
-            --vscode-text: #d4d4d4;
-            --vscode-border: #404040;
+            --editor-bg: #1e1e1e;
+            --editor-fg: #d4d4d4;
+            --header-bg: #111827;
+            --header-fg: #ffffff;
+            --border-color: #374151;
         }
 
-        .light {
-            --vscode-bg: #ffffff;
-            --vscode-sidebar: #f3f3f3;
-            --vscode-editor: #ffffff;
-            --vscode-text: #000000;
-            --vscode-border: #e0e0e0;
+        /* Layout */
+        .app-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 1rem;
         }
 
-        .editor-theme {
-            background-color: var(--vscode-editor);
-            color: var(--vscode-text);
+        .header {
+            background-color: var(--header-bg);
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
         }
 
-        .sidebar-theme {
-            background-color: var(--vscode-sidebar);
+        .content {
+            display: flex;
+            gap: 1rem;
+            height: calc(100vh - 120px);
         }
 
-        /* Custom scrollbar */
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+                height: auto;
+            }
+        }
+
+        /* Editor and Preview */
+        .editor-container, .preview-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background-color: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .panel-header {
+            padding: 0.75rem 1rem;
+            background-color: #2d3748;
+            color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-textarea {
+            flex: 1;
+            padding: 1rem;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--editor-fg);
+            background-color: var(--editor-bg);
+            border: none;
+            resize: none;
+            outline: none;
+            min-height: 300px;
+        }
+
+        .preview-frame {
+            flex: 1;
+            width: 100%;
+            border: none;
+            background-color: #ffffff;
+            min-height: 300px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-secondary {
+            background-color: #4b5563;
+            color: #ffffff;
+        }
+
+        .btn-secondary:hover {
+            background-color: #374151;
+        }
+
+        /* Icons */
+        .icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        /* Fullscreen mode */
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            background-color: #ffffff;
+            padding: 1rem;
+        }
+
+        .fullscreen .preview-frame {
+            height: calc(100vh - 4rem);
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            background-color: transparent;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        /* Scrollbars */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -51,91 +184,70 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #666;
+            background: #9ca3af;
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #888;
-        }
-
-        /* Mobile optimization */
-        @media (max-width: 768px) {
-            .mobile-stack {
-                flex-direction: column !important;
-            }
-            
-            .mobile-h-half {
-                height: 50vh !important;
-            }
+            background: #6b7280;
         }
     </style>
 </head>
-<body class="h-full bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
-    <div class="min-h-full">
+<body>
+    <div class="app-container">
         <!-- Header -->
-        <header class="bg-white dark:bg-gray-800 shadow-sm">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
-                    <div class="flex items-center">
-                        <h1 class="text-xl font-semibold text-gray-900 dark:text-white">VS Code HTML Previewer</h1>
-                    </div>
-                    <div class="flex items-center space-x-4">
-                        <!-- Theme Toggle -->
-                        <button id="themeToggle" class="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-                            </svg>
-                        </button>
-                        <!-- Action Buttons -->
-                        <div class="flex space-x-2">
-                            <button id="runButton" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                Run
-                            </button>
-                            <button id="downloadButton" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600">
-                                <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3"></path>
-                                </svg>
-                                Download
-                            </button>
-                        </div>
-                    </div>
+        <header class="header">
+            <div class="flex justify-between items-center">
+                <h1 class="text-xl font-semibold">VS Code HTML Previewer</h1>
+                <div class="flex items-center gap-4">
+                    <button id="themeToggle" class="theme-toggle" title="Toggle theme">
+                        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </button>
+                    <button id="runButton" class="btn btn-primary">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                        Run
+                    </button>
+                    <button id="downloadButton" class="btn btn-secondary">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        Download
+                    </button>
                 </div>
             </div>
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="flex mobile-stack space-x-6 space-y-0 mobile-space-x-0 mobile-space-y-6">
-                <!-- Editor Section -->
-                <div class="flex-1 mobile-h-half">
-                    <div class="h-full rounded-lg shadow-lg overflow-hidden">
-                        <div class="bg-gray-800 dark:bg-gray-900 px-4 py-2 flex justify-between items-center">
-                            <h2 class="text-sm font-medium text-gray-200">HTML File</h2>
-                        </div>
-                        <textarea id="codeInput" class="editor-theme w-full h-[calc(100%-40px)] p-4 font-mono text-sm resize-none focus:outline-none" spellcheck="false"></textarea>
-                    </div>
+        <div class="content">
+            <!-- Editor Section -->
+            <div class="editor-container">
+                <div class="panel-header">
+                    <span>HTML File</span>
                 </div>
-
-                <!-- Preview Section -->
-                <div class="flex-1 mobile-h-half">
-                    <div class="h-full rounded-lg shadow-lg overflow-hidden">
-                        <div class="bg-gray-800 dark:bg-gray-900 px-4 py-2 flex justify-between items-center">
-                            <h2 class="text-sm font-medium text-gray-200">Preview</h2>
-                            <button id="fullscreenButton" class="p-1 rounded-md hover:bg-gray-700 focus:outline-none">
-                                <svg class="h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
-                                </svg>
-                            </button>
-                        </div>
-                        <iframe id="previewFrame" class="w-full h-[calc(100%-40px)] bg-white dark:bg-gray-800"></iframe>
-                    </div>
-                </div>
+                <textarea id="codeInput" class="editor-textarea" spellcheck="false"></textarea>
             </div>
-        </main>
+
+            <!-- Preview Section -->
+            <div class="preview-container" id="previewContainer">
+                <div class="panel-header">
+                    <span>Preview</span>
+                    <button id="fullscreenButton" class="theme-toggle">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                        </svg>
+                    </button>
+                </div>
+                <iframe id="previewFrame" class="preview-frame"></iframe>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -146,10 +258,12 @@
         const downloadButton = document.getElementById('downloadButton');
         const fullscreenButton = document.getElementById('fullscreenButton');
         const themeToggle = document.getElementById('themeToggle');
+        const previewContainer = document.getElementById('previewContainer');
 
         // Theme Management
-        let darkMode = localStorage.getItem('darkMode') === 'true';
-        
+        let darkMode = localStorage.getItem('darkMode') === 'true' || 
+                      window.matchMedia('(prefers-color-scheme: dark)').matches;
+
         function updateTheme() {
             document.documentElement.classList.toggle('dark', darkMode);
             localStorage.setItem('darkMode', darkMode);
@@ -159,8 +273,6 @@
             darkMode = !darkMode;
             updateTheme();
         });
-
-        updateTheme();
 
         // Preview Management
         function updatePreview() {
@@ -173,6 +285,7 @@
 
         runButton.addEventListener('click', updatePreview);
 
+        // Download Management
         downloadButton.addEventListener('click', () => {
             const code = codeInput.value;
             const blob = new Blob([code], { type: 'text/html' });
@@ -188,17 +301,16 @@
 
         // Fullscreen Management
         let isFullscreen = false;
-        const previewContainer = document.querySelector('.preview-section');
-
+        
         fullscreenButton.addEventListener('click', () => {
             isFullscreen = !isFullscreen;
-            if (isFullscreen) {
-                previewContainer.classList.add('fixed', 'inset-0', 'z-50', 'p-4', 'bg-white', 'dark:bg-gray-900');
-                fullscreenButton.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14h6v6M20 10h-6V4M14 4l7 7M3 21l7-7"/>';
-            } else {
-                previewContainer.classList.remove('fixed', 'inset-0', 'z-50', 'p-4', 'bg-white', 'dark:bg-gray-900');
-                fullscreenButton.querySelector('svg').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>';
-            }
+            previewContainer.classList.toggle('fullscreen', isFullscreen);
+            
+            const iconPath = isFullscreen
+                ? 'M4 14h6v6M20 10h-6V4M14 4l7 7M3 21l7-7'
+                : 'M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7';
+                
+            fullscreenButton.querySelector('path').setAttribute('d', iconPath);
         });
 
         // Initialize with example code
@@ -237,38 +349,8 @@
             updatePreview();
         }
 
-        // Mobile touch handling
-        let touchStartY;
-        let initialHeight;
-
-        function handleTouchStart(e) {
-            touchStartY = e.touches[0].clientY;
-            initialHeight = e.target.closest('.mobile-h-half').offsetHeight;
-        }
-
-        function handleTouchMove(e) {
-            if (!touchStartY) return;
-            
-            const deltaY = e.touches[0].clientY - touchStartY;
-            const newHeight = initialHeight + deltaY;
-            
-            // Ensure minimum height
-            if (newHeight >= 200) {
-                e.target.closest('.mobile-h-half').style.height = `${newHeight}px`;
-            }
-        }
-
-        function handleTouchEnd() {
-            touchStartY = null;
-            initialHeight = null;
-        }
-
-        // Add touch handlers for mobile resizing
-        document.querySelectorAll('.mobile-h-half').forEach(el => {
-            el.addEventListener('touchstart', handleTouchStart);
-            el.addEventListener('touchmove', handleTouchMove);
-            el.addEventListener('touchend', handleTouchEnd);
-        });
+        // Initialize theme
+        updateTheme();
     </script>
 </body>
 </html>
